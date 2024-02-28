@@ -1,0 +1,45 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]  # Replace with the branch triggering deployment
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # Build and test the Python backend (replace with your commands)
+    #   - name: Build and test Python backend
+    #     run: |
+    #       python -m unittest tests
+
+      # Create a zip file for deployment (replace with your commands)
+      - name: Create deployment package
+        run: |
+          cd backend
+          zip -r deployment.zip .
+
+      # Configure AWS credentials using AWS Secrets Manager
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: east-us-2
+
+      # Deploy the zip file to AWS Lambda
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://deployment.zip
+
+      # Deploy the HTML frontend to S3 (replace with your commands)
+      - name: Deploy HTML frontend to S3
+        run: |
+          aws s3 cp --acl public-read frontend/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html
+
