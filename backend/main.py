@@ -1,6 +1,4 @@
-import tkinter as tk
-from tkinter import messagebox
-import sympy
+import json
 import sys
 import random
 import time
@@ -125,42 +123,6 @@ def is_strong_pseudoprime(n, a):
             return True
     return False
 
-def miller_rabe(n, k=5):
-    """
-    Miller-Rabin primality test with k iterations.
-    """
-    if n < 2:
-        return False
-    if n in (2, 3):
-        return True
-    if n % 2 == 0:
-        return False
-
-    # Check for strong pseudoprime bases depending on the range of n
-    if n < 2047:
-        bases = [2]
-    elif n < 1373653:
-        bases = [2, 3]
-    elif n < 25326001:
-        bases = [2, 3, 5]
-    elif n < 3215031751:
-        bases = [2, 3, 5, 7]
-    elif n < 2152302898747:
-        bases = [2, 3, 5, 7, 11]
-    elif n < 3474749660383:
-        bases = [2, 3, 5, 7, 11, 13]
-    elif n < 341550071728321:
-        bases = [2, 3, 5, 7, 11, 13, 17]
-    else:
-        # For larger n, use more bases
-        bases = [random.randint(2, n - 2) for _ in range(k)]
-
-    for _ in range(k):
-        a = random.choice(bases)
-        if not is_strong_pseudoprime(n, a):
-            return False
-    return True
-
 ''' This is the primality test that 
     combines the filter of dividing
     by small primes and Miller-Rabin.
@@ -257,67 +219,36 @@ def get_prime(smallPrimes, bits):
     ## solution: pass it in as a param
     # smallPrimes = getSmallPrimes(1, 2000)
     try:
-        bits = int(entry.get())
         t1 = time.perf_counter()
         q = gen_random(bits)
         while prime_test(q, smallPrimes) == False:
             q = gen_random(bits)
-
         elapsed = time.perf_counter() - t1
         # print(f'[*] {elapsed} sec to generate {len(bin(q))-2}-bit prime')
-        messagebox.showinfo("Prime Number", f"Time elapsed: {elapsed} s\nThe prime number with {bits} bits is:\n{q}")
         return str(q), elapsed
     except Exception as e:
-        messagebox.showerror("Error", f"An error occurred: {e}")
-        return None, None
+        return e, None
+
+
+def lambda_handler(event, context):
+    data=json.loads((event['body']))
     
-def on_button_click():
-    # Get the number of bits from the Entry widget.
-    bits_str = entry.get()
-    smallPrimes=getSmallPrimes(1, 500)
-    if bits_str.isdigit():
-        bits = int(bits_str)
-        # Generate a new prime number.
-        prime, elapsed = get_prime(smallPrimes, bits)
-        # Update the UI with the new prime number.
-        # This depends on how you want to display the prime number.
-        print({prime: elapsed})
+    bits=data['bits']
+    print(f'bits: {bits}')
+    
+    # TODO implement
+    smallPrimes = getSmallPrimes(1, 500)
+    p, elapsed = get_prime(smallPrimes, (int(bits)))
+    return {
+        'statusCode': 200,
+        'body': json.dumps(f'{p}, {elapsed}'),
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+            'Access-Control-Max-Age': '86400',  # 24 hours
+        }
+    }
 
 
-# c={}
-# while(len(c)<int(sys.argv[2])):
-#     p, elapsed=get_prime(int(sys.argv[1]), smallPrimes)
-#     c[p] = elapsed
-
-
-# avgtime=sum(c.values())/len(c)
-# print(f'avgtime across {len(c)} (likely) primes={avgtime}')
-
-# with open(sys.argv[4],'w') as f:
-#     for k in c:
-#         f.write(f'{k}\n')
-
-# q=get_prime(int(sys.argv[1]))
-# print(q)
-
-# yayer=prime_test(1877564517738233, smallPrimes)
-# print(f'yayer:{yayer}')
-# Create the main application window
-root = tk.Tk()
-root.title("Prime Number Generator")
-
-# Create a label and entry for the number of bits
-label = tk.Label(root, text="Enter the number of bits:")
-label.pack()
-entry = tk.Entry(root, state="normal")
-entry.insert(0, "1024")
-entry.pack()
-entry.focus_set()
-
-
-# Create a button to generate the prime number
-button = tk.Button(root, text="Generate Prime", command=on_button_click)
-button.pack()
-
-# Start the GUI event loop
-root.mainloop()
