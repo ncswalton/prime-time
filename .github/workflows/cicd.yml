@@ -27,11 +27,11 @@ jobs:
 
       # Configure AWS credentials using AWS Secrets Manager
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: east-us-2
+          aws-region: us-east-2
 
       # Deploy the zip file to AWS Lambda
       - name: Deploy to AWS Lambda
