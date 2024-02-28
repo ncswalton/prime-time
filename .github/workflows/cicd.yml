@@ -23,7 +23,7 @@ jobs:
       - name: Create deployment package
         run: |
           cd backend
-          zip -r deployment.zip .
+          zip -r ../deployment.zip .
 
       # Configure AWS credentials using AWS Secrets Manager
       - name: Configure AWS credentials
