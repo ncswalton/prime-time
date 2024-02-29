@@ -41,5 +41,5 @@ jobs:
       # Deploy the HTML frontend to S3 (replace with your commands)
       - name: Deploy HTML frontend to S3
         run: |
-          aws s3 cp --acl public-read frontend/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html
+          aws s3 cp frontend/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html
 
