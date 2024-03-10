@@ -3,6 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main ]  # Replace with the branch triggering deployment
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'infra/**'
+      - '.github/**'
 
 jobs:
   build-and-deploy:
