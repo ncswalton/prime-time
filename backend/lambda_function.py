@@ -4,14 +4,15 @@ import random
 import time
 
 
-''' This function represents a single LFSR.
+
+def lfsr(start, tap_array):
+    ''' This function represents a single LFSR.
     The parameters are an initial fill and an
     array of tap indices. The LFSR goes through
     an iteration and returns the next fill.
     The output bit is gotten in the ilfsr()
     function which calls lfsr().
-'''
-def lfsr(start, tap_array):
+    '''
     temp = start
     for tap in tap_array:
         temp ^= (start >> tap)
@@ -22,14 +23,15 @@ def lfsr(start, tap_array):
     return start
 
 
-''' This function is used to build the 
+
+def naive_is_prime(x): # helper function to identify small primes by trial division
+    ''' This function is used to build the 
     "filter" that is a part of the prime
     test. It is a naive algorithm that
     does trial division on a number by
     odds up to its square root to find
     primes.
-'''
-def naive_isPrime(x): # helper function to identify small primes by trial division
+    '''
     x = abs(int(x))
     if x < 2:
         return False
@@ -43,39 +45,16 @@ def naive_isPrime(x): # helper function to identify small primes by trial divisi
                 return False
         return True
 
-def miller_rabinski(n, k): 
-    if n == 2 or n == 3:
-        return True
 
-    # if n % 2 == 0:
-    #     return False
 
-    r, s = 0, n - 1
-    while s % 2 == 0:
-        r += 1
-        s //= 2
-
-    for _ in range(k):
-        a = random.randrange(2, n - 1)
-        x = pow(a, s, n)
-        if x == 1 or x == n - 1:
-            continue
-        for _ in range(r - 1):
-            x = pow(x, 2, n)
-            if x == n - 1:
-                break
-        else:
-            return False
-    return True
-''' This is an implementation of the widely
+def miller_rabin(n, k): 
+    ''' This is an implementation of the widely
     used Miller-Rabin probabilistic primality
     test. Right now the second parameter isn't
     being used. This means we are only running
     MR once on each big number. Fine for our
     purposes but not ideal.
-'''
-def miller_rabin(n, k): 
-
+    '''
     if n == 2:
         return True
     l = n - 1  # holds the value of n-1
@@ -109,55 +88,44 @@ def miller_rabin(n, k):
             # print("b1 = ", b1)
 
 
-def is_strong_pseudoprime(n, a):
-    """
-    Test if n is a strong pseudoprime to base a.
-    """
-    d, s = n - 1, 0
-    while d % 2 == 0:
-        d, s = d // 2, s + 1
-    if pow(a, d, n) == 1:
-        return True
-    for r in range(s):
-        if pow(a, d * 2**r, n) == n - 1:
-            return True
-    return False
 
-''' This is the primality test that 
+def prime_test(n, smallPrimes): 
+    ''' This is the primality test that 
     combines the filter of dividing
     by small primes and Miller-Rabin.
-'''
-def prime_test(n, smallPrimes): 
+    '''
     for k in range(len(smallPrimes)):
         if n % smallPrimes[k] == 0:
             # print("n is composite")
             return False
-    return miller_rabinski(n, 1) # if the input passes the divisibility trials, pass it to miller rabin
+    return miller_rabin(n, 1) # if the input passes the divisibility trials, pass it to miller rabin
 
-''' this function returns an array of all
-    primes less than 2000. The array is 
+
+def get_small_primes(upper_bound):
+    ''' this function returns an array of all
+    primes up to specified max. The array is 
     used as a filter when checking for
     primes.
-'''
-def getSmallPrimes(a, b):
+    '''
     t = {}
     t[0] = 2  # manually set 2 as prime
     ctr = 1
-    if a % 2 == 0:  # start odd
-        a += 1
-    for x in range (a, b, 2):  # only check odds
-        if naive_isPrime(x):
+    if upper_bound % 2 == 0:  # start odd
+        upper_bound += 1
+    for x in range (1, upper_bound, 2):  # only check odds
+        if naive_is_prime(x):
             t[ctr] = x
             ctr += 1
     return t
 
 
-''' This function combines multiple LFSRs.
+
+def ilfsr(seeds, length):
+    ''' This function combines multiple LFSRs.
     seeds is an array of initial fills for
     the multiple registers. length is the 
     desired amount of bits.
-'''
-def ilfsr(seeds, length):
+    '''
     # the function is hard coded for deg-32 polys
     # to avoid referencing another parameter
     # polys = getPolys(src, 32)
@@ -177,7 +145,9 @@ def ilfsr(seeds, length):
     return int(res, 2) # return as a decimal
 
 
-''' This function is a pseudorandom number
+
+def gen_random(output_length):
+    ''' This function is a pseudorandom number
     generator. The parameter is the desired 
     length in bits of the output. Uses LFSR
     seeded with nanosecond precision time.
@@ -185,8 +155,7 @@ def ilfsr(seeds, length):
     It's possible that this function returns
     a 1025-bit number instead of 1024, but
     that doesn't affect our implementation.
-'''
-def gen_random(output_length):
+    '''
     fluff = time.time_ns()
     seeds = [(pow(fluff, i) % pow(2, 32)) for i in range(1, 6)]
     random_bits = ilfsr(seeds, output_length - 1) # obtain a random number with (output_length - 1) bits
@@ -195,26 +164,28 @@ def gen_random(output_length):
     return rand_int + 1 if rand_int % 2 == 0 else rand_int # right now the function will return odds only
 
 
-''' This function takes a number of bits
+
+def nbit(n):  
+    ''' This function takes a number of bits
     as input and returns a "random" n-bit
     integer. The built-in random function
     isn't secure, so this shouldn't be 
     the only source of randomness.
-'''
-def nbit(n):  
+    '''
     num = random.randrange((2 ** (n-1)) + 1, (2 ** n) - 1) 
     if num % 2 == 0:
         num += 1
     return num
 
 
-''' This is the function that gets called
+
+def get_prime(smallPrimes, bits): 
+    ''' This is the function that gets called
     for the key exchange. It combines 3 
     utility functions to return a prime
     with the specified number of bits
     as a string of decimal digits.
-'''
-def get_prime(smallPrimes, bits): 
+    '''
     # find a way to make this accessible so it doesn't have to be recomputed every time
     ## solution: pass it in as a param
     # smallPrimes = getSmallPrimes(1, 2000)
@@ -237,7 +208,7 @@ def lambda_handler(event, context):
     print(f'bits: {bits}')
     
     # TODO implement
-    smallPrimes = getSmallPrimes(1, 500)
+    smallPrimes = get_small_primes(500)
     p, elapsed = get_prime(smallPrimes, (int(bits)))
     return {
         'statusCode': 200,
