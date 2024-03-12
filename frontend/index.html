@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Prime Number Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            font-weight: bolder;
+        }
+
+        #primeForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #primeForm label,
+        #primeForm input,
+        #primeForm button {
+            font-size: 1.2em;
+        }
+
+        #primeForm button {
+            padding: 10px 20px;
+            background-color: #ff0a68d0;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-style: italic;
+            border-radius: 5px;
+        }
+
+        #primeForm button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            font-size: 1.5em;
+            text-align: center;
+            color: #007BFF;
+            word-wrap: break-word;
+            width: 70%;
+            margin: 0 auto;
+        }
+
+        #time {
+            font-size: 1.2em;
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>PrimeTime</h1>
+    <form id="primeForm">
+        <label for="bits">Enter the number of bits:</label>
+        <input type="text" id="bits" name="bits" required>
+        <button type="submit">Generate Prime</button>
+    </form>
+    <div id="time"></div>
+    <div id="result"></div>
+
+    <script>
+        async function getSecretUrl() {
+            try {
+                const url = "";
+                const data = { "secret_name": "dev/api-url" };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error fetching secret URL: ${response.status}`); // Throw error for non-200 status
+                }
+
+                const responseData = await response.json();
+                return responseData.body; // Assuming the response contains "body" property with the URL
+            } catch (error) {
+                console.error('Error fetching secret URL:', error);
+                throw error; // Re-throw to handle in the main function
+            }
+        }
+
+        document.getElementById('primeForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            try {
+                const bits = document.getElementById('bits').value;
+
+                // Get the secret URL first
+                const secretUrl = await getSecretUrl();
+
+                fetch(secretUrl, { // Use the retrieved secret URL
+                    method: 'POST',
+                    body: JSON.stringify({ bits: bits }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('time').innerText = 'Time to generate the prime: ' + data.split(', ')[1] + ' seconds';
+                        document.getElementById('result').innerText = data.split(',')[0];
+                    })
+                    .catch(error => console.error('Error fetching prime number:', error));
+            } catch (error) {
+                console.error('Error during process:', error);
+                // Handle any errors that occurred during secret retrieval or prime generation
+            }
+        });
+    </script>
+
+</html>
